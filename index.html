@@ -142,6 +142,7 @@
     <script>
         let score = 0;
         let currentQuestionIndex = 0;
+        let correctAnswersCount = 0; // Variable to track correct answers
         let questions = [
             {
                 question: 'What is 2 + 2?',
@@ -188,6 +189,7 @@
         function initializeQuestions() {
             score = 0;
             currentQuestionIndex = 0;
+            correctAnswersCount = 0; // Reset correct answers count
             document.getElementById('score').innerText = `Your score: $${score}`;
             document.getElementById('questionContainer').style.display = 'block';
             document.getElementById('storeContainer').style.display = 'none';
@@ -211,6 +213,10 @@
                 document.getElementById('nextButton').classList.add('hidden');
             } else {
                 document.getElementById('questionContainer').style.display = 'none';
+                // Check if all answers were correct
+                if (correctAnswersCount === questions.length) {
+                    score += 4000; // Add bonus for all correct answers
+                }
                 alert(`🎉 You've finished the game! Your total score is: $${score}`);
                 showStore();
             }
@@ -219,6 +225,7 @@
         function checkAnswer(correctAnswer, selectedAnswer) {
             if (selectedAnswer === correctAnswer) {
                 score += 1000;
+                correctAnswersCount++; // Increment correct answers count
                 document.getElementById('score').innerText = `Your score: $${score}`;
             } else {
                 alert('❌ Incorrect answer! Moving to the next question.');
@@ -228,65 +235,57 @@
         }
 
         function showStore() {
-            const storeDiv = document.getElementById('storeContainer');
             const itemsDiv = document.getElementById('items');
             itemsDiv.innerHTML = '';
-
             items.forEach((item, index) => {
-                itemsDiv.innerHTML += `
-                    <div class="item">
-                        <input type="checkbox" id="item${index}" ${item.bought ? 'checked' : ''}>
-                        <label for="item${index}" class="${item.bought ? 'bought' : ''}">
-                            <img src="${item.image}" alt="${item.name}"> ${item.name} - $${item.cost}
-                        </label>
-                    </div>`;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'item';
+                itemDiv.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}">
+                    <div>
+                        <strong>${item.name}</strong><br>
+                        Cost: $${item.cost}<br>
+                        <button onclick="buyItem(${index})" ${item.bought ? 'disabled' : ''}>Buy</button>
+                    </div>
+                `;
+                itemsDiv.appendChild(itemDiv);
             });
+            document.getElementById('storeContainer').style.display = 'block';
+        }
 
-            storeDiv.style.display = 'block';
+        function buyItem(index) {
+            const item = items[index];
+            if (score >= item.cost && !item.bought) {
+                score -= item.cost;
+                item.bought = true;
+                document.getElementById('score').innerText = `Your score: $${score}`;
+                alert(`You bought ${item.name}!`);
+                showStore();
+            } else {
+                alert(`You don't have enough score to buy ${item.name}.`);
+            }
         }
 
         function proceedToCheckout() {
-            let totalCost = 0;
-            let selectedItems = [];
+            document.getElementById('storeContainer').style.display = 'none';
+            showCheckoutSummary();
+        }
 
-            items.forEach((item, index) => {
-                const checkbox = document.getElementById(`item${index}`);
-                if (checkbox.checked && !item.bought) {
-                    totalCost += item.cost;
-                    selectedItems.push(item.name);
-                }
-            });
-
-            if (totalCost > score) {
-                alert(`❌ Not enough money to buy the selected items! Total needed: $${totalCost}, but you have: $${score}.`);
-                return;
-            }
-
-            // Show checkout
+        function showCheckoutSummary() {
             const finalItemsDiv = document.getElementById('finalItems');
             finalItemsDiv.innerHTML = '';
-            selectedItems.forEach(item => {
-                finalItemsDiv.innerHTML += `<div>${item}</div>`;
+            items.forEach(item => {
+                if (item.bought) {
+                    finalItemsDiv.innerHTML += `<div>${item.name} - $${item.cost}</div>`;
+                }
             });
-
-            document.getElementById('checkoutSummary').innerText = `Total Cost: $${totalCost}. You have: $${score}.`;
+            document.getElementById('checkoutSummary').innerText = `Total Score: $${score}`;
             document.getElementById('finalCheckoutContainer').style.display = 'block';
-            document.getElementById('storeContainer').style.display = 'none';
         }
 
         function confirmPurchase() {
-            let totalCost = 0;
-            items.forEach(item => {
-                if (document.getElementById(`item${items.indexOf(item)}`).checked && !item.bought) {
-                    totalCost += item.cost;
-                    item.bought = true; // Mark as bought
-                    score -= item.cost; // Deduct cost from score
-                }
-            });
-
-            alert('✅ Purchase confirmed! Thank you for shopping!');
-            document.getElementById('score').innerText = `Your score: $${score}`;
-            goBackToStore();
+            alert('Thank you for your purchase!');
+            // Optionally reset the game or redirect
         }
 
         function goBackToStore() {
@@ -296,7 +295,6 @@
 
         function clearCart() {
             items.forEach(item => item.bought = false);
-            document.getElementById('score').innerText = `Your score: $${score}`;
             showStore();
         }
     </script>
