@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Learning Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom right, #f0f4f8, #cfd9e6);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #container {
+            max-width: 900px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 12px 25px;
+            margin: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            font-size: 18px;
+        }
+        button:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        #questionContainer {
+            display: none;
+            margin-bottom: 20px;
+        }
+        .answerButton {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            font-size: 16px;
+        }
+        .answerButton:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        #storeContainer {
+            display: none;
+            text-align: left;
+        }
+        .item {
+            margin: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            border: 1px solid #e0e0e0;
+        }
+        .item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        .item img {
+            max-width: 100px; /* Set image width */
+            margin-right: 15px;
+            border-radius: 8px;
+        }
+        .bought {
+            text-decoration: line-through;
+            color: gray;
+        }
+        #checkoutSummary {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 200px; /* Max width for question images */
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>🎮 Learning Game</h1>
+        <div id="score">Your score: $0</div>
+        <button id="startButton" onclick="startGame()">Start Game</button>
+
+        <div id="questionContainer" class="hidden">
+            <img id="questionImage" src="" alt="Question Image">
+            <div id="question"></div>
+            <div id="answers"></div>
+            <button id="nextButton" class="hidden" onclick="nextQuestion()">Next Question</button>
+        </div>
+
+        <div id="storeContainer" class="hidden">
+            <h2>🛍️ Store</h2>
+            <div id="items" style="display: flex; flex-direction: column; align-items: center;"></div>
+            <button onclick="proceedToCheckout()">Proceed to Checkout</button>
+            <button onclick="clearCart()">Remove All</button>
+        </div>
+
+        <div id="finalCheckoutContainer" class="hidden">
+            <h2>🛒 Checkout Page</h2>
+            <div id="finalItems"></div>
+            <div id="checkoutSummary"></div>
+            <button onclick="confirmPurchase()">Confirm Purchase</button>
+            <button onclick="goBackToStore()">Go Back to Store</button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let currentQuestionIndex = 0;
+        let questions = [
+            {
+                question: 'What is 2 + 2?',
+                answers: ['3', '4', '5'],
+                correct: '4',
+                image: 'https://static.vecteezy.com/system/resources/previews/003/546/353/original/child-at-his-desk-solving-a-math-problem-free-vector.jpg'
+            },
+            {
+                question: 'What is the capital of France?',
+                answers: ['Paris', 'London', 'Berlin'],
+                correct: 'Paris',
+                image: 'https://i.natgeofe.com/k/54b5e731-f8d6-4a93-92e0-b7b137cac411/france-champs-elysees-paris.jpg?wp=1&w=1084.125&h=609'
+            },
+            {
+                question: 'What is 5 x 3?',
+                answers: ['10', '15', '20'],
+                correct: '15',
+                image: 'https://static.vecteezy.com/system/resources/previews/019/772/260/original/boy-doing-homework-and-feel-confused-child-at-his-desk-solving-a-math-problem-illustration-vector.jpg'
+            },
+            {
+                question: 'What is the color of the sky?',
+                answers: ['Blue', 'Green', 'Red'],
+                correct: 'Blue',
+                image: 'https://www.mowtec.co.uk/sitetecword/wp-content/uploads/2015/11/Sky-Greyscale.jpg'
+            },
+            {
+                question: 'What is the largest planet in our solar system?',
+                answers: ['Earth', 'Jupiter', 'Mars'],
+                correct: 'Jupiter',
+                image: 'https://cdn.mos.cms.futurecdn.net/v5n22xGyNNHLzSnSArbrVH-1200-80.jpg'
+            }
+        ];
+        const items = [
+            { name: '📱 iPhone 16', cost: 2000, bought: false, image: 'https://www.apple.com/newsroom/images/2024/09/apple-introduces-iphone-16-and-iphone-16-plus/article/Apple-iPhone-16-hero-240909_inline.jpg.large.jpg' },
+            { name: '💻 MacBook', cost: 2000, bought: false, image: 'https://store.storeimages.cdn-apple.com/8756/as-images.apple.com/is/mba13-midnight-config-202402?wid=820&hei=498&fmt=jpeg&qlt=90&.v=1708371033110' },
+            { name: '📺 Television', cost: 3000, bought: false, image: 'https://ansons.ph/wp-content/uploads/2023/09/06_LED-32S5400AF_02.png' },
+            { name: '🎧 AirPods Max', cost: 3000, bought: false, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqcqh4UIpz3nNFxv2KxMlyZb5qls0Idu6dZQ&s' }
+        ];
+
+        function startGame() {
+            initializeQuestions();
+        }
+
+        function initializeQuestions() {
+            score = 0;
+            currentQuestionIndex = 0;
+            document.getElementById('score').innerText = `Your score: $${score}`;
+            document.getElementById('questionContainer').style.display = 'block';
+            document.getElementById('storeContainer').style.display = 'none';
+            document.getElementById('finalCheckoutContainer').style.display = 'none';
+            document.getElementById('startButton').style.display = 'none';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const currentQuestion = questions[currentQuestionIndex];
+                document.getElementById('question').innerText = currentQuestion.question;
+                document.getElementById('questionImage').src = currentQuestion.image || '';
+                const answersDiv = document.getElementById('answers');
+                answersDiv.innerHTML = '';
+
+                currentQuestion.answers.forEach((answer) => {
+                    answersDiv.innerHTML += `<button class="answerButton" onclick="checkAnswer('${currentQuestion.correct}', '${answer}')">${answer}</button>`;
+                });
+
+                document.getElementById('nextButton').classList.add('hidden');
+            } else {
+                document.getElementById('questionContainer').style.display = 'none';
+                alert(`🎉 You've finished the game! Your total score is: $${score}`);
+                showStore();
+            }
+        }
+
+        function checkAnswer(correctAnswer, selectedAnswer) {
+            if (selectedAnswer === correctAnswer) {
+                score += 1000;
+                document.getElementById('score').innerText = `Your score: $${score}`;
+            } else {
+                alert('❌ Incorrect answer! Moving to the next question.');
+            }
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        function showStore() {
+            const storeDiv = document.getElementById('storeContainer');
+            const itemsDiv = document.getElementById('items');
+            itemsDiv.innerHTML = '';
+
+            items.forEach((item, index) => {
+                itemsDiv.innerHTML += `
+                    <div class="item">
+                        <input type="checkbox" id="item${index}" ${item.bought ? 'checked' : ''}>
+                        <label for="item${index}" class="${item.bought ? 'bought' : ''}">
+                            <img src="${item.image}" alt="${item.name}"> ${item.name} - $${item.cost}
+                        </label>
+                    </div>`;
+            });
+
+            storeDiv.style.display = 'block';
+        }
+
+        function proceedToCheckout() {
+            let totalCost = 0;
+            let selectedItems = [];
+
+            items.forEach((item, index) => {
+                const checkbox = document.getElementById(`item${index}`);
+                if (checkbox.checked && !item.bought) {
+                    totalCost += item.cost;
+                    selectedItems.push(item.name);
+                }
+            });
+
+            if (totalCost > score) {
+                alert(`❌ Not enough money to buy the selected items! Total needed: $${totalCost}, but you have: $${score}.`);
+                return;
+            }
+
+            // Show checkout
+            const finalItemsDiv = document.getElementById('finalItems');
+            finalItemsDiv.innerHTML = '';
+            selectedItems.forEach(item => {
+                finalItemsDiv.innerHTML += `<div>${item}</div>`;
+            });
+
+            document.getElementById('checkoutSummary').innerText = `Total Cost: $${totalCost}. You have: $${score}.`;
+            document.getElementById('finalCheckoutContainer').style.display = 'block';
+            document.getElementById('storeContainer').style.display = 'none';
+        }
+
+        function confirmPurchase() {
+            let totalCost = 0;
+            items.forEach(item => {
+                if (document.getElementById(`item${items.indexOf(item)}`).checked && !item.bought) {
+                    totalCost += item.cost;
+                    item.bought = true; // Mark as bought
+                    score -= item.cost; // Deduct cost from score
+                }
+            });
+
+            alert('✅ Purchase confirmed! Thank you for shopping!');
+            document.getElementById('score').innerText = `Your score: $${score}`;
+            goBackToStore();
+        }
+
+        function goBackToStore() {
+            document.getElementById('finalCheckoutContainer').style.display = 'none';
+            showStore();
+        }
+
+        function clearCart() {
+            items.forEach(item => item.bought = false);
+            document.getElementById('score').innerText = `Your score: $${score}`;
+            showStore();
+        }
+    </script>
+</body>
+</html>
