@@ -10,7 +10,7 @@
             font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to bottom right, #f0f4f8, #cfd9e6);
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
             color: #333;
             display: flex;
             justify-content: center;
@@ -18,18 +18,19 @@
             height: 100vh;
         }
         #container {
-            max-width: 900px;
-            background: white;
-            padding: 30px;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
             border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
             text-align: center;
+            backdrop-filter: blur(10px);
         }
         h1 {
             color: #007bff;
             margin-bottom: 20px;
             font-size: 2.5em;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            text-shadow: 1px 1px 5px rgba(0,0,0,0.2);
         }
         button {
             padding: 12px 25px;
@@ -37,14 +38,16 @@
             background-color: #28a745;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 20px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.2s;
             font-size: 18px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         button:hover {
             background-color: #218838;
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
         #questionContainer {
             display: none;
@@ -58,10 +61,11 @@
             background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 20px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.2s;
             font-size: 16px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
         .answerButton:hover {
             background-color: #0056b3;
@@ -70,6 +74,7 @@
         #storeContainer {
             display: none;
             text-align: left;
+            animation: fadeIn 0.5s;
         }
         .item {
             margin: 15px;
@@ -79,17 +84,23 @@
             display: flex;
             align-items: center;
             transition: transform 0.3s, box-shadow 0.3s;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             border: 1px solid #e0e0e0;
+            position: relative;
+            overflow: hidden;
         }
         .item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
         }
         .item img {
-            max-width: 100px;
+            max-width: 80px;
             margin-right: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+        .item:hover img {
+            transform: scale(1.1);
         }
         .bought {
             text-decoration: line-through;
@@ -97,9 +108,10 @@
         }
         #checkoutSummary {
             margin-top: 20px;
+            font-weight: bold;
         }
         img {
-            max-width: 200px;
+            max-width: 250px;
             height: auto;
             border-radius: 10px;
             margin-bottom: 15px;
@@ -108,12 +120,22 @@
         .hidden {
             display: none;
         }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #bonusNotification {
+            color: #ff9800;
+            font-weight: bold;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <div id="container">
         <h1>🎮 Learning Game</h1>
         <div id="score">Your score: $0</div>
+        <div id="bonusNotification" class="hidden"></div>
         <button id="startButton" onclick="startGame()">Start Game</button>
 
         <div id="questionContainer" class="hidden">
@@ -142,7 +164,7 @@
     <script>
         let score = 0;
         let currentQuestionIndex = 0;
-        let correctAnswersCount = 0; // Variable to track correct answers
+        let correctAnswersCount = 0;
         const questions = [
             {
                 question: 'What is 2 + 2?',
@@ -189,8 +211,9 @@
         function initializeQuestions() {
             score = 0;
             currentQuestionIndex = 0;
-            correctAnswersCount = 0; // Reset correct answers count
+            correctAnswersCount = 0;
             document.getElementById('score').innerText = `Your score: $${score}`;
+            document.getElementById('bonusNotification').classList.add('hidden');
             document.getElementById('questionContainer').style.display = 'block';
             document.getElementById('storeContainer').style.display = 'none';
             document.getElementById('finalCheckoutContainer').style.display = 'none';
@@ -213,10 +236,12 @@
                 document.getElementById('nextButton').classList.add('hidden');
             } else {
                 document.getElementById('questionContainer').style.display = 'none';
-                // Check if all answers were correct
                 if (correctAnswersCount === questions.length) {
                     score += 4000; // Add bonus for all correct answers
+                    document.getElementById('bonusNotification').innerText = `🎉 You earned a $4000 bonus for getting all answers correct!`;
+                    document.getElementById('bonusNotification').classList.remove('hidden');
                 }
+                document.getElementById('score').innerText = `Your score: $${score}`; // Update score before showing store
                 alert(`🎉 You've finished the game! Your total score is: $${score}`);
                 showStore();
             }
@@ -225,7 +250,7 @@
         function checkAnswer(correctAnswer, selectedAnswer) {
             if (selectedAnswer === correctAnswer) {
                 score += 1000;
-                correctAnswersCount++; // Increment correct answers count
+                correctAnswersCount++;
                 document.getElementById('score').innerText = `Your score: $${score}`;
             } else {
                 alert('❌ Incorrect answer! Moving to the next question.');
@@ -285,7 +310,6 @@
 
         function confirmPurchase() {
             alert('Thank you for your purchase!');
-            // Optionally reset the game or redirect
         }
 
         function goBackToStore() {
